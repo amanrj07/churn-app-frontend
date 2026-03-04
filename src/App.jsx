@@ -1,9 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, Cell
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const API = "https://churn-app-backend.onrender.com";
 
@@ -38,6 +35,32 @@ const fields = [
   { key: "DeviceProtection", label: "Device Protection", type: "select", options: [{ v: 0, l: "No" }, { v: 1, l: "Yes" }] },
 ];
 
+// SVG Logo (neural network style)
+const Logo = () => (
+  <svg className="header-logo" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="28" cy="28" r="27" stroke="#2563eb" strokeWidth="2" fill="#0d1b3e"/>
+    {/* nodes */}
+    <circle cx="14" cy="20" r="3" fill="#4f46e5"/>
+    <circle cx="14" cy="36" r="3" fill="#4f46e5"/>
+    <circle cx="28" cy="14" r="3" fill="#7c3aed"/>
+    <circle cx="28" cy="28" r="3" fill="#2563eb"/>
+    <circle cx="28" cy="42" r="3" fill="#7c3aed"/>
+    <circle cx="42" cy="20" r="3" fill="#06b6d4"/>
+    <circle cx="42" cy="36" r="3" fill="#06b6d4"/>
+    {/* edges */}
+    <line x1="14" y1="20" x2="28" y2="14" stroke="#4f46e5" strokeWidth="1" opacity="0.7"/>
+    <line x1="14" y1="20" x2="28" y2="28" stroke="#4f46e5" strokeWidth="1" opacity="0.7"/>
+    <line x1="14" y1="36" x2="28" y2="28" stroke="#4f46e5" strokeWidth="1" opacity="0.7"/>
+    <line x1="14" y1="36" x2="28" y2="42" stroke="#4f46e5" strokeWidth="1" opacity="0.7"/>
+    <line x1="28" y1="14" x2="42" y2="20" stroke="#7c3aed" strokeWidth="1" opacity="0.7"/>
+    <line x1="28" y1="28" x2="42" y2="20" stroke="#2563eb" strokeWidth="1" opacity="0.7"/>
+    <line x1="28" y1="28" x2="42" y2="36" stroke="#2563eb" strokeWidth="1" opacity="0.7"/>
+    <line x1="28" y1="42" x2="42" y2="36" stroke="#7c3aed" strokeWidth="1" opacity="0.7"/>
+    {/* arrow */}
+    <path d="M38 44 L48 44 L44 40" stroke="#06b6d4" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+  </svg>
+);
+
 export default function App() {
   const [form, setForm] = useState(defaultForm);
   const [result, setResult] = useState(null);
@@ -45,8 +68,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleChange = (k, v) =>
-    setForm(prev => ({ ...prev, [k]: parseFloat(v) }));
+  const handleChange = (k, v) => setForm(prev => ({ ...prev, [k]: parseFloat(v) }));
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -57,9 +79,8 @@ export default function App() {
         axios.get(`${API}/feature-importance`),
       ]);
       setResult(predRes.data);
-      const imp = impRes.data.importances;
       setImportances(
-        Object.entries(imp).map(([name, value]) => ({
+        Object.entries(impRes.data.importances).map(([name, value]) => ({
           name, value: parseFloat((value * 100).toFixed(2))
         }))
       );
@@ -70,75 +91,70 @@ export default function App() {
   };
 
   return (
-    <div className="app">
-      <h1>🔮 Churn Predictor</h1>
-      <p className="subtitle">Enter customer details to predict churn probability</p>
-
-      <div className="card">
-        <h2>Customer Information</h2>
-        <div className="form-grid">
-          {fields.map(f => (
-            <div className="field" key={f.key}>
-              <label>{f.label}</label>
-              {f.type === "select" ? (
-                <select value={form[f.key]} onChange={e => handleChange(f.key, e.target.value)}>
-                  {f.options.map(o => (
-                    <option key={o.v} value={o.v}>{o.l}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="number"
-                  value={form[f.key]}
-                  onChange={e => handleChange(f.key, e.target.value)}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-        <button className="btn" onClick={handleSubmit} disabled={loading}>
-          {loading ? "Analyzing..." : "Predict Churn →"}
-        </button>
+    <>
+      <div className="header">
+        <Logo />
+        <h1>Churn Predictor</h1>
       </div>
 
-      {error && <div className="error">⚠️ {error}</div>}
-
-      {result && (
-        <div className="card result-card">
-          <h2>Prediction Result</h2>
-          <div className={`result-label ${result.churn ? "churn" : "no-churn"}`}>
-            {result.label}
+      <div className="app">
+        <div className="card">
+          <p className="card-title">customer information</p>
+          <div className="form-grid">
+            {fields.map(f => (
+              <div className="field" key={f.key}>
+                <label>{f.label}</label>
+                {f.type === "select" ? (
+                  <select value={form[f.key]} onChange={e => handleChange(f.key, e.target.value)}>
+                    {f.options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+                  </select>
+                ) : (
+                  <input type="number" value={form[f.key]} onChange={e => handleChange(f.key, e.target.value)} />
+                )}
+              </div>
+            ))}
           </div>
-          <p className="result-prob">Churn Probability: <strong>{result.probability}%</strong></p>
-          <div className="prob-bar-bg">
-            <div
-              className="prob-bar-fill"
-              style={{
+          <button className="btn" onClick={handleSubmit} disabled={loading}>
+            {loading ? "Analyzing..." : "Predict Churn →"}
+          </button>
+        </div>
+
+        {error && <div className="error">⚠️ {error}</div>}
+
+        {result && (
+          <div className="card result-card">
+            <p className="card-title">prediction result</p>
+            <div className={`result-label ${result.churn ? "churn" : "no-churn"}`}>
+              {result.label}
+            </div>
+            <p className="result-prob">Churn Probability: <strong>{result.probability}%</strong></p>
+            <div className="prob-bar-bg">
+              <div className="prob-bar-fill" style={{
                 width: `${result.probability}%`,
                 background: result.churn ? "#f87171" : "#4ade80"
-              }}
-            />
+              }}/>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {importances && (
-        <div className="card">
-          <h2>Top 5 Churn Drivers</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={importances} layout="vertical" margin={{ left: 80 }}>
-              <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 12 }} unit="%" />
-              <YAxis dataKey="name" type="category" tick={{ fill: "#e2e8f0", fontSize: 12 }} />
-              <Tooltip formatter={v => `${v}%`} contentStyle={{ background: "#1e293b", border: "none" }} />
-              <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                {importances.map((_, i) => (
-                  <Cell key={i} fill={["#38bdf8","#818cf8","#fb7185","#34d399","#fbbf24"][i]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-    </div>
+        {importances && (
+          <div className="card">
+            <p className="card-title">top 5 churn drivers</p>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={importances} layout="vertical" margin={{ left: 90 }}>
+                <XAxis type="number" tick={{ fill: "#7a9cc4", fontSize: 12 }} unit="%" />
+                <YAxis dataKey="name" type="category" tick={{ fill: "#e2e8f0", fontSize: 12 }} />
+                <Tooltip formatter={v => `${v}%`} contentStyle={{ background: "#112254", border: "1px solid #1e3a6e", borderRadius: 8 }} />
+                <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                  {importances.map((_, i) => (
+                    <Cell key={i} fill={["#2563eb","#4f46e5","#7c3aed","#06b6d4","#0ea5e9"][i]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
